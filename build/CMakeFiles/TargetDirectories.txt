@@ -1,0 +1,8 @@
+/home/shiva/clang-cfg-tool/build/CMakeFiles/intrinsics_gen.dir
+/home/shiva/clang-cfg-tool/build/CMakeFiles/omp_gen.dir
+/home/shiva/clang-cfg-tool/build/CMakeFiles/acc_gen.dir
+/home/shiva/clang-cfg-tool/build/CMakeFiles/RISCVTargetParserTableGen.dir
+/home/shiva/clang-cfg-tool/build/CMakeFiles/clang-tablegen-targets.dir
+/home/shiva/clang-cfg-tool/build/CMakeFiles/cfg-tool.dir
+/home/shiva/clang-cfg-tool/build/CMakeFiles/edit_cache.dir
+/home/shiva/clang-cfg-tool/build/CMakeFiles/rebuild_cache.dir

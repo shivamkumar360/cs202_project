@@ -1,0 +1,17 @@
+digraph ProgramCFG {
+  node [shape=box, fontname="Courier"];
+  subgraph cluster_test1 {
+    label = "test1()";
+    style=filled; color=lightgrey;
+    test1_Node0 [label="Block 0\nIN: { d1 d2 d3 }\n----------------\n----------------\nOUT: { d1 d2 d3 }", style=filled, fillcolor=white];
+    test1_Node1 [label="Block 1\n!!! POTENTIAL UNINIT BUG !!!\nIN: { d1 d2 d3 }\n----------------\nx\nreturn x;\n\n----------------\nOUT: { d1 d2 d3 }", style=filled, fillcolor=red];
+    test1_Node1 -> test1_Node0;
+    test1_Node2 [label="Block 2\nIN: { d1 d3 }\n----------------\nx = 5\n----------------\nOUT: { d1 d2 }", style=filled, fillcolor=white];
+    test1_Node2 -> test1_Node1;
+    test1_Node3 [label="Block 3\nIN: { d1 }\n----------------\nint x;\n\ncond > 10\n----------------\nOUT: { d1 d3 }", style=filled, fillcolor=white];
+    test1_Node3 -> test1_Node2;
+    test1_Node3 -> test1_Node1;
+    test1_Node4 [label="Block 4\nIN: { }\n----------------\n----------------\nOUT: { d1 }", style=filled, fillcolor=white];
+    test1_Node4 -> test1_Node3;
+  }
+}
