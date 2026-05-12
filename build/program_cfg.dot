@@ -3,14 +3,14 @@ digraph ProgramCFG {
   subgraph cluster_test_merge {
     label = "test_merge()";
     style=filled; color=lightgrey;
-    test_merge_Node0 [label="Block 0\nIN: { d1 d2 d3 }\n----------------\n----------------\nOUT: { d1 d2 d3 }", style=filled, fillcolor=white];
-    test_merge_Node1 [label="Block 1\nIN: { d1 d2 d3 }\n----------------\nx\nreturn x;\n\n----------------\nOUT: { d1 d2 d3 }", style=filled, fillcolor=white];
+    test_merge_Node0 [label="Block 0\nIN: { d1 d2 }\n----------------\n----------------\nOUT: { d1 d2 }", style=filled, fillcolor=white];
+    test_merge_Node1 [label="Block 1\n!!! POTENTIAL UNINIT BUG !!!\nIN: { d1 d3 d4 }\n----------------\nx = <recovery-expr>()\nx\nreturn x;\n\n----------------\nOUT: { d1 d2 }", style=filled, fillcolor=red];
     test_merge_Node1 -> test_merge_Node0;
-    test_merge_Node2 [label="Block 2\nIN: { d1 d4 }\n----------------\nx = 200\n----------------\nOUT: { d1 d2 }", style=filled, fillcolor=white];
+    test_merge_Node2 [label="Block 2\nIN: { d1 d5 }\n----------------\nx = 200\n----------------\nOUT: { d1 d3 }", style=filled, fillcolor=white];
     test_merge_Node2 -> test_merge_Node1;
-    test_merge_Node3 [label="Block 3\nIN: { d1 d4 }\n----------------\nx = 100\n----------------\nOUT: { d1 d3 }", style=filled, fillcolor=white];
+    test_merge_Node3 [label="Block 3\nIN: { d1 d5 }\n----------------\nx = 100\n----------------\nOUT: { d1 d4 }", style=filled, fillcolor=white];
     test_merge_Node3 -> test_merge_Node1;
-    test_merge_Node4 [label="Block 4\nIN: { d1 }\n----------------\nint x;\n\ncond\n----------------\nOUT: { d1 d4 }", style=filled, fillcolor=white];
+    test_merge_Node4 [label="Block 4\nIN: { d1 }\n----------------\nint x;\n\ncond\n----------------\nOUT: { d1 d5 }", style=filled, fillcolor=white];
     test_merge_Node4 -> test_merge_Node3;
     test_merge_Node4 -> test_merge_Node2;
     test_merge_Node5 [label="Block 5\nIN: { }\n----------------\n----------------\nOUT: { d1 }", style=filled, fillcolor=white];
