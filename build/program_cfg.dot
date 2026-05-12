@@ -1,14 +1,19 @@
 digraph ProgramCFG {
   node [shape=box, fontname="Courier"];
-  subgraph cluster_main {
-    label = "main()";
+  subgraph cluster_test_merge {
+    label = "test_merge()";
     style=filled; color=lightgrey;
-    main_Node0 [label="Block 0\nIN: { d1 d2 }\n----------------\n----------------\nOUT: { d1 d2 }", style=filled, fillcolor=white];
-    main_Node1 [label="Block 1\n!!! UNREACHABLE (Optimizable) !!!\nIN: { }\n----------------\nint b = 50;\n [Folded: 50]\nb\nreturn b;\n\n----------------\nOUT: { d1 }", style=filled, fillcolor=lightgray];
-    main_Node1 -> main_Node0;
-    main_Node2 [label="Block 2\nIN: { }\n----------------\nint a = 10 + 20;\n [Folded: 30]\na\nreturn a;\n\n----------------\nOUT: { d2 }", style=filled, fillcolor=white];
-    main_Node2 -> main_Node0;
-    main_Node3 [label="Block 3\nIN: { }\n----------------\n----------------\nOUT: { }", style=filled, fillcolor=white];
-    main_Node3 -> main_Node2;
+    test_merge_Node0 [label="Block 0\nIN: { d1 d2 d3 }\n----------------\n----------------\nOUT: { d1 d2 d3 }", style=filled, fillcolor=white];
+    test_merge_Node1 [label="Block 1\nIN: { d1 d2 d3 }\n----------------\nx\nreturn x;\n\n----------------\nOUT: { d1 d2 d3 }", style=filled, fillcolor=white];
+    test_merge_Node1 -> test_merge_Node0;
+    test_merge_Node2 [label="Block 2\nIN: { d1 d4 }\n----------------\nx = 200\n----------------\nOUT: { d1 d2 }", style=filled, fillcolor=white];
+    test_merge_Node2 -> test_merge_Node1;
+    test_merge_Node3 [label="Block 3\nIN: { d1 d4 }\n----------------\nx = 100\n----------------\nOUT: { d1 d3 }", style=filled, fillcolor=white];
+    test_merge_Node3 -> test_merge_Node1;
+    test_merge_Node4 [label="Block 4\nIN: { d1 }\n----------------\nint x;\n\ncond\n----------------\nOUT: { d1 d4 }", style=filled, fillcolor=white];
+    test_merge_Node4 -> test_merge_Node3;
+    test_merge_Node4 -> test_merge_Node2;
+    test_merge_Node5 [label="Block 5\nIN: { }\n----------------\n----------------\nOUT: { d1 }", style=filled, fillcolor=white];
+    test_merge_Node5 -> test_merge_Node4;
   }
 }
