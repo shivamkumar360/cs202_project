@@ -51,7 +51,7 @@ struct Definition {
         this->id=i;
         this->varName=name;
         this->stmt=s;
-        this->isUnit=uninit;
+        this->isUninit=uninit;
     }
         
 };
