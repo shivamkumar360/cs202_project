@@ -60,6 +60,7 @@ class RDAnalyzer {
     CFG* cfg;
     ASTContext* context;
     FunctionDecl* FD;
+
     std::vector<Definition> allDefs;
     std::map<unsigned, std::set<int>> IN, OUT, GEN, KILL;
     std::set<unsigned> buggyBlocks;
@@ -105,7 +106,8 @@ private:
     //   Unreachable Code Detection 
 
 
-    void findUnreachableBlocks() {
+    void findUnreachableBlocks() 
+    {
         std::set<unsigned> reachable;
         std::vector<unsigned> worklist;
         unsigned entryId = cfg->getEntry().getBlockID();
@@ -143,8 +145,7 @@ private:
         int nextId = 1;
         unsigned entryId = cfg->getEntry().getBlockID();
 
-        // Handle Parameters
-
+        // first we will handle parameters of the function
 
         for (auto* param : FD->parameters()) 
 
@@ -153,7 +154,7 @@ private:
             GEN[entryId].insert(nextId - 1);
         }
 
-        // Handle AST Statements
+        // here we will handle actual statements now 
 
 
         for (auto* block : *cfg) 
@@ -170,7 +171,8 @@ private:
                             if (const DeclRefExpr* dre = dyn_cast<DeclRefExpr>(bo->getLHS()))
                                 allDefs.push_back(Definition(nextId++, dre->getNameInfo().getAsString(), s, false));
                         }
-                    } else if (const DeclStmt* ds = dyn_cast<DeclStmt>(s)) 
+                    } 
+                    else if (const DeclStmt* ds = dyn_cast<DeclStmt>(s)) 
                     {
                         for (auto* D : ds->decls()) 
                         {
@@ -183,61 +185,100 @@ private:
         }
     }
 
-    void computeGenKill() {
-        for (auto* block : *cfg) {
+    void computeGenKill() 
+    {
+        for (auto* block : *cfg) 
+        {
             unsigned bid = block->getBlockID();
             std::map<string, int> lastDefInBlock;
             for (auto& elem : *block) {
-                if (std::optional<CFGStmt> cs = elem.getAs<CFGStmt>()) {
-                    for (auto& d : allDefs) if (d.stmt == cs->getStmt()) lastDefInBlock[d.varName] = d.id;
+                if (std::optional<CFGStmt> cs = elem.getAs<CFGStmt>())
+                {
+                    for (auto& d : allDefs) 
+                    if (d.stmt == cs->getStmt())
+                     lastDefInBlock[d.varName] = d.id;
                 }
             }
-            for (auto const& [var, id] : lastDefInBlock) {
+            for (auto const& [var, id] : lastDefInBlock)
+            {
                 GEN[bid].insert(id);
-                for (auto& other : allDefs) if (other.varName == var && other.id != id) KILL[bid].insert(other.id);
+                for (auto& other : allDefs)
+                 if (other.varName == var && other.id != id)
+                  KILL[bid].insert(other.id);
             }
         }
     }
 
-    void runWorklist() {
+    void runWorklist() 
+    {
         bool changed = true;
-        while (changed) {
+        while (changed) 
+        {
             changed = false;
-            for (auto* block : *cfg) {
+            for (auto* block : *cfg) 
+            {
                 unsigned bid = block->getBlockID();
                 std::set<int> newIn;
                 for (auto& pred : block->preds())
-                    if (pred) newIn.insert(OUT[pred->getBlockID()].begin(), OUT[pred->getBlockID()].end());
+                {
+                    if (pred) 
+                    {
+                    newIn.insert(OUT[pred->getBlockID()].begin(), OUT[pred->getBlockID()].end());
+                    }
+                }
+
                 IN[bid] = newIn;
                 std::set<int> oldOut = OUT[bid];
                 std::set<int> diff;
-                for (int id : IN[bid]) if (KILL[bid].find(id) == KILL[bid].end()) diff.insert(id);
+                for (int id : IN[bid]) 
+                if (KILL[bid].find(id) == KILL[bid].end()) 
+                diff.insert(id);
                 diff.insert(GEN[bid].begin(), GEN[bid].end());
                 OUT[bid] = diff;
-                if (OUT[bid] != oldOut) changed = true;
+                if (OUT[bid] != oldOut) 
+                changed = true;
             }
         }
     }
 
-    void checkUninitializedVariables() {
-        for (auto* block : *cfg) {
+    void checkUninitializedVariables() 
+    {
+        for (auto* block : *cfg) 
+        {
             std::set<int> curReached = IN[block->getBlockID()];
-            for (auto& elem : *block) {
-                if (std::optional<CFGStmt> cs = elem.getAs<CFGStmt>()) {
+            for (auto& elem : *block)
+             {
+                if (std::optional<CFGStmt> cs = elem.getAs<CFGStmt>()) 
+                {
                     const Stmt* s = cs->getStmt();
-                    if (const BinaryOperator* bo = dyn_cast<BinaryOperator>(s)) {
-                        if (bo->isAssignmentOp()) {
-                            if (checkStmtInternal(bo->getRHS(), curReached)) buggyBlocks.insert(block->getBlockID());
-                        } else if (checkStmtInternal(s, curReached)) buggyBlocks.insert(block->getBlockID());
-                    } else if (checkStmtInternal(s, curReached)) buggyBlocks.insert(block->getBlockID());
+                    if (const BinaryOperator* bo = dyn_cast<BinaryOperator>(s)) 
+                    {
+                        if (bo->isAssignmentOp()) 
+                        {
+                            if (checkStmtInternal(bo->getRHS(), curReached)) 
+                            buggyBlocks.insert(block->getBlockID());
+                        } 
+                        else if (checkStmtInternal(s, curReached)) 
+                        buggyBlocks.insert(block->getBlockID());
+                    } 
+                    else if (checkStmtInternal(s, curReached)) 
+                    buggyBlocks.insert(block->getBlockID());
                     
-                    for (auto& d : allDefs) {
-                        if (d.stmt == s) {
+                    for (auto& d : allDefs) 
+                    {
+                        if (d.stmt == s) 
+                        {
                             std::set<int> nextR;
-                            for (int id : curReached) {
+                            for (int id : curReached) 
+                            {
                                 bool killed = false;
-                                for (auto& o : allDefs) if (o.id == id && o.varName == d.varName) killed = true;
-                                if (!killed) nextR.insert(id);
+                                for (auto& o : allDefs) 
+                                {
+                                if (o.id == id && o.varName == d.varName) 
+                                killed = true;
+                                }
+                                if (!killed) 
+                                nextR.insert(id);
                             }
                             nextR.insert(d.id);
                             curReached = nextR;
@@ -248,21 +289,40 @@ private:
         }
     }
 
-    bool checkStmtInternal(const Stmt* s, const std::set<int>& reaching) {
-        if (const DeclRefExpr* dre = dyn_cast<DeclRefExpr>(s)) {
-            if (const VarDecl* vd = dyn_cast<VarDecl>(dre->getDecl())) {
-                if (vd->hasGlobalStorage() || isa<FunctionDecl>(dre->getDecl())) return false;
+    bool checkStmtInternal(const Stmt* s, const std::set<int>& reaching) 
+    {
+        if (const DeclRefExpr* dre = dyn_cast<DeclRefExpr>(s)) 
+        {
+            if (const VarDecl* vd = dyn_cast<VarDecl>(dre->getDecl())) 
+            {
+                if (vd->hasGlobalStorage() || isa<FunctionDecl>(dre->getDecl())) 
+                return false;
                 string name = vd->getNameAsString();
                 bool safe = false, uninit = false;
                 for (int id : reaching) {
-                    for (auto& d : allDefs) if (d.id == id && d.varName == name) {
-                        if (d.isUninit) uninit = true; else safe = true;
+                    for (auto& d : allDefs) 
+                    if (d.id == id && d.varName == name) 
+                    {
+                        if (d.isUninit) 
+                        uninit = true; 
+                        else 
+                        safe = true;
                     }
                 }
-                if (uninit || !safe) return true;
+                if (uninit || !safe) 
+                return true;
             }
         }
-        for (const Stmt* child : s->children()) if (child && checkStmtInternal(child, reaching)) return true;
+        else if (isa<RecoveryExpr>(s)) {
+            return true; 
+        }
+
+
+
+
+        for (const Stmt* child : s->children()) 
+        if (child && checkStmtInternal(child, reaching)) 
+        return true;
         return false;
     }
 };
@@ -368,7 +428,10 @@ public:
 
 class MyAction : public ASTFrontendAction {
 public:
-    std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file) override { return std::make_unique<MyConsumer>(); }
+    std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file) override 
+    { 
+        return std::make_unique<MyConsumer>(); 
+    }
 };
 
 int main(int argc, const char **argv) {

@@ -1,19 +1,85 @@
 digraph ProgramCFG {
   node [shape=box, fontname="Courier"];
-  subgraph cluster_test_merge {
-    label = "test_merge()";
+  subgraph cluster_reach_error {
+    label = "reach_error()";
     style=filled; color=lightgrey;
-    test_merge_Node0 [label="Block 0\nIN: { d1 d2 }\n----------------\n----------------\nOUT: { d1 d2 }", style=filled, fillcolor=white];
-    test_merge_Node1 [label="Block 1\n!!! POTENTIAL UNINIT BUG !!!\nIN: { d1 d3 d4 }\n----------------\nx = <recovery-expr>()\nx\nreturn x;\n\n----------------\nOUT: { d1 d2 }", style=filled, fillcolor=red];
-    test_merge_Node1 -> test_merge_Node0;
-    test_merge_Node2 [label="Block 2\nIN: { d1 d5 }\n----------------\nx = 200\n----------------\nOUT: { d1 d3 }", style=filled, fillcolor=white];
-    test_merge_Node2 -> test_merge_Node1;
-    test_merge_Node3 [label="Block 3\nIN: { d1 d5 }\n----------------\nx = 100\n----------------\nOUT: { d1 d4 }", style=filled, fillcolor=white];
-    test_merge_Node3 -> test_merge_Node1;
-    test_merge_Node4 [label="Block 4\nIN: { d1 }\n----------------\nint x;\n\ncond\n----------------\nOUT: { d1 d5 }", style=filled, fillcolor=white];
-    test_merge_Node4 -> test_merge_Node3;
-    test_merge_Node4 -> test_merge_Node2;
-    test_merge_Node5 [label="Block 5\nIN: { }\n----------------\n----------------\nOUT: { d1 }", style=filled, fillcolor=white];
-    test_merge_Node5 -> test_merge_Node4;
+    reach_error_Node0 [label="Block 0\nIN: { }\n----------------\n----------------\nOUT: { }", style=filled, fillcolor=white];
+    reach_error_Node1 [label="Block 1\n!!! UNREACHABLE (Optimizable) !!!\nIN: { }\n----------------\n(0) ? (void)(0) : __assert_fail(\"0\", \"/home/shiva/clang-cfg-tool/build/../test6.c\", 3, __extension__ __PRETTY_FUNCTION__)\n----------------\nOUT: { }", style=filled, fillcolor=lightgray];
+    reach_error_Node1 -> reach_error_Node0;
+    reach_error_Node2 [label="Block 2\n!!! UNREACHABLE (Optimizable) !!!\nIN: { }\n----------------\n(void)(0)\n----------------\nOUT: { }", style=filled, fillcolor=lightgray];
+    reach_error_Node2 -> reach_error_Node1;
+    reach_error_Node3 [label="Block 3\nIN: { }\n----------------\n__assert_fail(\"0\", \"/home/shiva/clang-cfg-tool/build/../test6.c\", 3, __extension__ __PRETTY_FUNCTION__)\n----------------\nOUT: { }", style=filled, fillcolor=white];
+    reach_error_Node3 -> reach_error_Node0;
+    reach_error_Node4 [label="Block 4\nIN: { }\n----------------\n0 [Folded: 0]\n----------------\nOUT: { }", style=filled, fillcolor=white];
+    reach_error_Node4 -> reach_error_Node3;
+    reach_error_Node5 [label="Block 5\nIN: { }\n----------------\n----------------\nOUT: { }", style=filled, fillcolor=white];
+    reach_error_Node5 -> reach_error_Node4;
+  }
+  subgraph cluster___VERIFIER_assert {
+    label = "__VERIFIER_assert()";
+    style=filled; color=lightgrey;
+    __VERIFIER_assert_Node0 [label="Block 0\nIN: { d1 }\n----------------\n----------------\nOUT: { d1 }", style=filled, fillcolor=white];
+    __VERIFIER_assert_Node1 [label="Block 1\nIN: { d1 }\n----------------\nreach_error()\nabort()\n----------------\nOUT: { d1 }", style=filled, fillcolor=white];
+    __VERIFIER_assert_Node1 -> __VERIFIER_assert_Node0;
+    __VERIFIER_assert_Node2 [label="Block 2\nIN: { d1 }\n----------------\n!(cond)\n----------------\nOUT: { d1 }", style=filled, fillcolor=white];
+    __VERIFIER_assert_Node2 -> __VERIFIER_assert_Node1;
+    __VERIFIER_assert_Node2 -> __VERIFIER_assert_Node0;
+    __VERIFIER_assert_Node3 [label="Block 3\nIN: { }\n----------------\n----------------\nOUT: { d1 }", style=filled, fillcolor=white];
+    __VERIFIER_assert_Node3 -> __VERIFIER_assert_Node2;
+  }
+  subgraph cluster_main {
+    label = "main()";
+    style=filled; color=lightgrey;
+    main_Node0 [label="Block 0\nIN: { d1 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 }\n----------------\n----------------\nOUT: { d1 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 }", style=filled, fillcolor=white];
+    main_Node1 [label="Block 1\nIN: { d1 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 }\n----------------\n0 [Folded: 0]\nreturn 0;\n\n----------------\nOUT: { d1 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 }", style=filled, fillcolor=white];
+    main_Node1 -> main_Node0;
+    main_Node2 [label="Block 2\nIN: { d1 d4 d5 d6 d7 d8 d9 d10 d11 d12 }\n----------------\nx++\n----------------\nOUT: { d1 d4 d5 d6 d7 d8 d9 d10 d11 d12 }", style=filled, fillcolor=white];
+    main_Node2 -> main_Node7;
+    main_Node3 [label="Block 3\nIN: { d1 d4 d5 d6 d7 d8 d9 d10 d11 d12 }\n----------------\ny++\n----------------\nOUT: { d1 d4 d5 d6 d7 d8 d9 d10 d11 d12 }", style=filled, fillcolor=white];
+    main_Node3 -> main_Node5;
+    main_Node4 [label="Block 4\n!!! POTENTIAL UNINIT BUG !!!\nIN: { d1 d4 d5 d6 d7 d8 d9 d10 d11 d12 }\n----------------\n__VERIFIER_assert(a[x] <= a[y])\n----------------\nOUT: { d1 d4 d5 d6 d7 d8 d9 d10 d11 d12 }", style=filled, fillcolor=red];
+    main_Node4 -> main_Node3;
+    main_Node5 [label="Block 5\nIN: { d1 d4 d5 d6 d7 d8 d9 d10 d11 d12 }\n----------------\ny < 100000\n----------------\nOUT: { d1 d4 d5 d6 d7 d8 d9 d10 d11 d12 }", style=filled, fillcolor=white];
+    main_Node5 -> main_Node4;
+    main_Node5 -> main_Node2;
+    main_Node6 [label="Block 6\nIN: { d1 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 }\n----------------\ny = x + 1\n----------------\nOUT: { d1 d4 d5 d6 d7 d8 d9 d10 d11 d12 }", style=filled, fillcolor=white];
+    main_Node6 -> main_Node5;
+    main_Node7 [label="Block 7\nIN: { d1 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 }\n----------------\nx < 100000\n----------------\nOUT: { d1 d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 }", style=filled, fillcolor=white];
+    main_Node7 -> main_Node6;
+    main_Node7 -> main_Node1;
+    main_Node8 [label="Block 8\nIN: { d5 d6 d7 d8 d9 d10 d11 d12 }\n----------------\nint x;\n\nint y;\n\nx = 0\n----------------\nOUT: { d3 d4 d5 d6 d7 d8 d9 d10 d11 d12 }", style=filled, fillcolor=white];
+    main_Node8 -> main_Node7;
+    main_Node9 [label="Block 9\nIN: { d5 d6 d7 d8 d9 d11 d12 }\n----------------\n----------------\nOUT: { d5 d6 d7 d8 d9 d11 d12 }", style=filled, fillcolor=white];
+    main_Node9 -> main_Node16;
+    main_Node10 [label="Block 10\nIN: { d5 d6 d7 d8 d11 d12 }\n----------------\n----------------\nOUT: { d5 d6 d7 d8 d11 d12 }", style=filled, fillcolor=white];
+    main_Node10 -> main_Node14;
+    main_Node11 [label="Block 11\nIN: { d5 d6 d7 d8 d9 d11 d12 }\n----------------\ni = i + 1\n----------------\nOUT: { d5 d6 d7 d8 d11 d12 }", style=filled, fillcolor=white];
+    main_Node11 -> main_Node10;
+    main_Node12 [label="Block 12\n!!! POTENTIAL UNINIT BUG !!!\nIN: { d5 d6 d7 d8 d9 d11 d12 }\n----------------\nint t = a[i];\n\na[i] = a[i - 1]\na[i - 1] = t\nswapped = 1\n----------------\nOUT: { d5 d6 d7 d9 d11 d12 }", style=filled, fillcolor=red];
+    main_Node12 -> main_Node11;
+    main_Node13 [label="Block 13\n!!! POTENTIAL UNINIT BUG !!!\nIN: { d5 d6 d7 d8 d9 d11 d12 }\n----------------\na[i - 1] > a[i]\n----------------\nOUT: { d5 d6 d7 d8 d9 d11 d12 }", style=filled, fillcolor=red];
+    main_Node13 -> main_Node12;
+    main_Node13 -> main_Node11;
+    main_Node14 [label="Block 14\nIN: { d5 d6 d7 d8 d9 d11 d12 }\n----------------\ni < 100000\n----------------\nOUT: { d5 d6 d7 d8 d9 d11 d12 }", style=filled, fillcolor=white];
+    main_Node14 -> main_Node13;
+    main_Node14 -> main_Node9;
+    main_Node15 [label="Block 15\nIN: { d5 d6 d7 d8 d9 d10 d11 d12 }\n----------------\nswapped = 0\nint i = 1;\n [Folded: 1]\n----------------\nOUT: { d6 d8 d9 d11 d12 }", style=filled, fillcolor=white];
+    main_Node15 -> main_Node14;
+    main_Node16 [label="Block 16\nIN: { d5 d6 d7 d8 d9 d10 d11 d12 }\n----------------\nswapped\n----------------\nOUT: { d5 d6 d7 d8 d9 d10 d11 d12 }", style=filled, fillcolor=white];
+    main_Node16 -> main_Node15;
+    main_Node16 -> main_Node8;
+    main_Node17 [label="Block 17\nIN: { d11 d12 }\n----------------\nint swapped = 1;\n [Folded: 1]\n----------------\nOUT: { d10 d11 d12 }", style=filled, fillcolor=white];
+    main_Node17 -> main_Node16;
+    main_Node18 [label="Block 18\nIN: { d11 d12 }\n----------------\nj++\n----------------\nOUT: { d11 d12 }", style=filled, fillcolor=white];
+    main_Node18 -> main_Node20;
+    main_Node19 [label="Block 19\nIN: { d11 d12 }\n----------------\n__VERIFIER_nondet_int()\na[j] = __VERIFIER_nondet_int()\n----------------\nOUT: { d11 d12 }", style=filled, fillcolor=white];
+    main_Node19 -> main_Node18;
+    main_Node20 [label="Block 20\nIN: { d11 d12 }\n----------------\nj < 100000\n----------------\nOUT: { d11 d12 }", style=filled, fillcolor=white];
+    main_Node20 -> main_Node19;
+    main_Node20 -> main_Node17;
+    main_Node21 [label="Block 21\nIN: { }\n----------------\nint a[100000];\n\nint j = 0;\n [Folded: 0]\n----------------\nOUT: { d11 d12 }", style=filled, fillcolor=white];
+    main_Node21 -> main_Node20;
+    main_Node22 [label="Block 22\nIN: { }\n----------------\n----------------\nOUT: { }", style=filled, fillcolor=white];
+    main_Node22 -> main_Node21;
   }
 }

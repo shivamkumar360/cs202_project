@@ -5,6 +5,7 @@ int test_merge(int cond) {
     } else {
         x = 200; 
     }
-    
+    x=y;
+   
     return x;
 }
